@@ -9,6 +9,7 @@ type CheckTokenResponse = {
         sub: string
         name: string
         email: string
+        groups: string[]
     }
     error?: string
 }
