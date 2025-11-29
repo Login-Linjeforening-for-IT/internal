@@ -6,7 +6,7 @@ import getServerStats from './handlers/stats/get.ts'
 import restartServiceHandler from './handlers/docker/restartService.ts'
 import getIngress from './handlers/nginx/getIngress.ts'
 import getDockerContainer from './handlers/docker/getContainer.ts'
-import preHandler from '#utils/auth/authHandler.ts'
+import preHandler from '#utils/auth/authMiddleware.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index

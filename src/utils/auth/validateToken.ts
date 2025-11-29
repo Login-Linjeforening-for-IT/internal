@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import config from '#config'
 
-const { api_token } = config
+const { USERINFO_URL } = config
 
 type CheckTokenResponse = {
     valid: boolean
@@ -13,27 +13,40 @@ type CheckTokenResponse = {
     error?: string
 }
 
-export default async function checkToken( req: FastifyRequest, res: FastifyReply ): Promise<CheckTokenResponse> {
+export default async function validateToken( req: FastifyRequest, res: FastifyReply ): Promise<CheckTokenResponse> {
+    const authHeader = req.headers['authorization']
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+            valid: false,
+            error: 'Missing or invalid Authorization header'
+        }
+    }
+
+    const token = authHeader.split(' ')[1]
+
     try {
-        const authHeader = req.headers['authorization']
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).send({
+        const userInfoRes = await fetch(USERINFO_URL, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+
+        if (!userInfoRes.ok) {
+            return {
                 valid: false,
                 error: 'Unauthorized'
-            })
+            }
         }
 
-        const token = authHeader.split(' ')[1]
-        if (token !== api_token) {
-            return res.status(401).send({
-                valid: false,
-                error: 'Unauthorized'
-            })
-        }
+        const userInfo = await userInfoRes.json()
 
-        return { valid: true }
-    } catch (error) {
-        res.log.error(error)
+        return {
+            valid: true,
+            userInfo: userInfo
+        }
+    } catch (err) {
+        res.log.error(err)
         return res.status(500).send({
             valid: false,
             error: 'Internal server error'
