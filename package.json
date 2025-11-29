@@ -24,7 +24,7 @@
     "@types/ws": "^8.18.1"
   },
   "imports": {
-    "#constants": "./src/constants.ts",
+    "#config": "./src/config.ts",
     "#utils/*": "./src/utils/*",
     "#db": "./src/db.ts"
   }

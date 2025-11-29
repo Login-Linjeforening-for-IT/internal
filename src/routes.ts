@@ -5,19 +5,22 @@ import restartHandler from './handlers/docker/restart.ts'
 import getServerStats from './handlers/stats/get.ts'
 import restartServiceHandler from './handlers/docker/restartService.ts'
 import getIngress from './handlers/nginx/getIngress.ts'
+import getDockerContainer from './handlers/docker/getContainer.ts'
+import preHandler from '#utils/auth/authHandler.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
     fastify.get('/', getIndex)
 
     // docker
-    fastify.get('/docker', getDockerContainers)
-    fastify.get('/docker/restart/:id', restartHandler)
-    fastify.get('/docker/restart/service/:id', restartServiceHandler)
+    fastify.get('/docker', { preHandler }, getDockerContainers)
+    fastify.get('/docker/:id', { preHandler }, getDockerContainer)
+    fastify.get('/docker/restart/:id', { preHandler }, restartHandler)
+    fastify.get('/docker/restart/service/:id', { preHandler }, restartServiceHandler)
 
     // ingress
-    fastify.get('/ingress/:port', getIngress)
+    fastify.get('/ingress/:port', { preHandler }, getIngress)
 
     // stats
-    fastify.get('/stats', getServerStats)
+    fastify.get('/stats', { preHandler }, getServerStats)
 }

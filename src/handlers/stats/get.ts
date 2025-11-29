@@ -84,7 +84,7 @@ export default async function getServerStats(_: FastifyRequest, res: FastifyRepl
                 os: `${os.type()} ${os.release()} ${os.arch()}`,
             },
         })
-    } catch (err: any) {
-        res.status(500).send({ error: err.message })
+    } catch (error) {
+        return res.status(500).send({ error: (error as Error).message })
     }
 }

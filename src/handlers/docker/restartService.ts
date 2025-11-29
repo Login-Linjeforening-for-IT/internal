@@ -24,8 +24,8 @@ export default async function restartServiceHandler(req: FastifyRequest, res: Fa
         }
 
         return res.send({ ok: true, stdout, stderr })
-    } catch (err: any) {
-        console.error(`Error redeploying service ${id}:`, err.message)
-        return res.status(500).send({ error: err.message })
+    } catch (error) {
+        console.error(`Error redeploying service ${id}: ${(error as Error).message}`)
+        return res.status(500).send({ error: (error as Error).message })
     }
 }

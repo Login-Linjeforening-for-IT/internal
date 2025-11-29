@@ -10,9 +10,9 @@ export default async function getIngress(req: FastifyRequest, res: FastifyReply)
         const data = await readFile(filePath, "utf8")
         const parsed = parseContent(data)
         return res.send({ parsed })
-    } catch (err) {
-        console.error(err)
-        return res.status(500).send({ error: "Failed to read file" })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({ error: (error as Error).message })
     }
 }
 

@@ -14,7 +14,7 @@ export default async function getDockerContainers(_: FastifyRequest, res: Fastif
         }).sort((a, b) => a.name.localeCompare(b.name))
 
         res.send({ status: containers.length > 0 ? 'available' : 'unavailable', count: containers.length, containers })
-    } catch (err: any) {
-        res.status(500).send({ error: err.message })
+    } catch (error) {
+        return res.status(500).send({ error: (error as Error).message })
     }
 }
