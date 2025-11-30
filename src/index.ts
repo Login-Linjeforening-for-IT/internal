@@ -15,7 +15,7 @@ fastify.register(cors, {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
 })
 
-const port = Number(process.env.PORT) || 8000
+const port = Number(process.env.PORT) || 8002
 
 fastify.register(ws, { prefix: "/api" })
 fastify.register(routes, { prefix: "/api" })
