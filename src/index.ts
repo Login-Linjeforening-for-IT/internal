@@ -2,6 +2,7 @@ import cors from '@fastify/cors'
 import Fastify from 'fastify'
 import routes from './routes.ts'
 import getIndex from './handlers/index/get.ts'
+import getFavicon from './handlers/favicon/getFavicon.ts'
 import websocketPlugin from '@fastify/websocket'
 import ws from './plugins/ws.ts'
 
@@ -20,6 +21,7 @@ const port = Number(process.env.PORT) || 8001
 fastify.register(ws, { prefix: "/api" })
 fastify.register(routes, { prefix: "/api" })
 fastify.get('/', getIndex)
+fastify.get('/favicon.ico', getFavicon)
 
 async function start() {
     try {
