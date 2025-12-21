@@ -5,6 +5,7 @@ import getIndex from './handlers/index/get.ts'
 import getFavicon from './handlers/favicon/getFavicon.ts'
 import websocketPlugin from '@fastify/websocket'
 import ws from './plugins/ws.ts'
+import backupScheduler from './plugins/backupScheduler.ts'
 import fs from 'fs'
 import path from 'path'
 
@@ -22,6 +23,7 @@ const port = Number(process.env.PORT) || 8001
 
 fastify.decorate('favicon', fs.readFileSync(path.join(process.cwd(), 'public', 'favicon.ico')))
 fastify.register(ws, { prefix: "/api" })
+fastify.register(backupScheduler)
 fastify.register(routes, { prefix: "/api" })
 fastify.get('/', getIndex)
 fastify.get('/favicon.ico', getFavicon)
