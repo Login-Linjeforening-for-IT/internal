@@ -11,7 +11,8 @@ const execAsync = promisify(exec)
 
 const formatSize = (b: number) => {
     const i = b === 0 ? 0 : Math.floor(Math.log(b) / Math.log(1024))
-    return `${(b / Math.pow(1024, i)).toFixed(2)} ${['B', 'KB', 'MB', 'GB', 'TB'][i]}`
+    const size = b / Math.pow(1024, i)
+    return `${Math.round(size)} ${['B', 'KB', 'MB', 'GB', 'TB'][i]}`
 }
 
 export default async function getBackupStats(_: FastifyRequest, res: FastifyReply) {
