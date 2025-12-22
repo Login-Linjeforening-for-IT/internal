@@ -9,6 +9,8 @@ import backupScheduler from './plugins/backupScheduler.ts'
 import fs from 'fs'
 import path from 'path'
 
+process.env.TZ = 'Europe/Oslo'
+
 const fastify = Fastify({
     logger: true
 })
