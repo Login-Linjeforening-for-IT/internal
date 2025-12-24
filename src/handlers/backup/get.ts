@@ -6,14 +6,9 @@ import { parse } from 'dotenv'
 import config from '#config'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { CronExpressionParser } from 'cron-parser'
+import { formatSize } from '#utils/format.ts'
 
 const execAsync = promisify(exec)
-
-function formatSize(b: number) {
-    const i = b === 0 ? 0 : Math.floor(Math.log(b) / Math.log(1024))
-    const size = b / Math.pow(1024, i)
-    return `${Math.round(size)} ${['B', 'KB', 'MB', 'GB', 'TB'][i]}`
-}
 
 export default async function getBackupStats(_: FastifyRequest, res: FastifyReply) {
     try {

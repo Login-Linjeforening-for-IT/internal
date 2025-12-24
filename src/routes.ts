@@ -7,6 +7,8 @@ import restartServiceHandler from './handlers/docker/restartService.ts'
 import getIngress from './handlers/nginx/getIngress.ts'
 import getDockerContainer from './handlers/docker/getContainer.ts'
 import getBackupStats from './handlers/backup/get.ts'
+import getBackupFiles from './handlers/backup/getFiles.ts'
+// import restoreBackup from './handlers/backup/post.ts'
 import preHandler from '#utils/auth/authMiddleware.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
@@ -21,6 +23,8 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
 
     // backup
     fastify.get('/backup', { preHandler }, getBackupStats)
+    fastify.get('/backup/files', { preHandler }, getBackupFiles)
+    // fastify.post('/backup/restore', { preHandler }, restoreBackup)
 
     // ingress
     fastify.get('/ingress/:port', { preHandler }, getIngress)
