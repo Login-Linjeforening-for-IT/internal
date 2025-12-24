@@ -9,7 +9,7 @@ import { CronExpressionParser } from 'cron-parser'
 
 const execAsync = promisify(exec)
 
-const formatSize = (b: number) => {
+function formatSize(b: number) {
     const i = b === 0 ? 0 : Math.floor(Math.log(b) / Math.log(1024))
     const size = b / Math.pow(1024, i)
     return `${Math.round(size)} ${['B', 'KB', 'MB', 'GB', 'TB'][i]}`
@@ -43,7 +43,7 @@ export default async function getBackupStats(_: FastifyRequest, res: FastifyRepl
                 const [dbSize, stats] = await Promise.all([
                     info.dbSize === 'Unknown' 
                         ? execAsync(
-                            `docker exec -e PGPASSWORD="${DB_PASSWORD}" ${id} psql -U "${DB_USER}" -d "${DB}" -t -c "SELECT pg_size_pretty(pg_database_size('${DB}'));"`
+                            `docker exec -e PGPASSWORD="${DB_PASSWORD}" ${id} psql -U "${DB_USER}" -d "${DB}" -t -c "SELECT pg_database_size('${DB}');"`
                         ).then(r => r.stdout.trim()).catch(() => 'Error')
                         : Promise.resolve(info.dbSize),
                     fs.readdir(backupDir).then(async files => {
@@ -54,7 +54,7 @@ export default async function getBackupStats(_: FastifyRequest, res: FastifyRepl
 
                 return {
                      ...info,
-                     dbSize,
+                     dbSize: isNaN(Number(dbSize)) ? dbSize : formatSize(Number(dbSize)),
                      totalStorage: formatSize(stats.size),
                      lastBackup: stats.time ? new Date(stats.time).toISOString() : null
                 }
