@@ -19,7 +19,7 @@ export default async function preHandler(req: FastifyRequest, res: FastifyReply)
         return res.status(401).send({ error: tokenResult.error || 'Invalid user information' })
     }
 
-    if(!tokenResult.userInfo.groups.includes(config.TEKKOM_GROUP)) {
+    if (!tokenResult.userInfo.groups.includes(config.TEKKOM_GROUP)) {
         return res.status(403).send({ error: 'Insufficient permissions' })
     }
 

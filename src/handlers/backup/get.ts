@@ -14,7 +14,7 @@ export default async function getBackupStats(_: FastifyRequest, res: FastifyRepl
     try {
         const format = '{{.ID}}|{{.Names}}|{{.Status}}|{{.Image}}|{{.Label "com.docker.compose.project"}}|{{.Label "com.docker.compose.project.working_dir"}}'
         const { stdout } = await execAsync(`docker ps -a --format '${format}'`)
-        
+
         const nextBackup = (() => {
             try {
                 return CronExpressionParser.parse(config.BACKUP_SCHEDULE).next().toISOString()
@@ -30,13 +30,13 @@ export default async function getBackupStats(_: FastifyRequest, res: FastifyRepl
             try {
                 const env = parse(await fs.readFile(path.join(workingDir, '.env'), 'utf-8').catch(() => ''))
                 const { DB, DB_USER, DB_PASSWORD } = env
-                
+
                 if (!DB || !DB_USER || !DB_PASSWORD) info.dbSize = 'Missing env vars'
                 else if (!status.startsWith('Up')) info.dbSize = 'Container not running'
 
                 const backupDir = path.join(config.BACKUP_PATH, project)
                 const [dbSize, stats] = await Promise.all([
-                    info.dbSize === 'Unknown' 
+                    info.dbSize === 'Unknown'
                         ? execAsync(
                             `docker exec -e PGPASSWORD="${DB_PASSWORD}" ${id} psql -U "${DB_USER}" -d "${DB}" -t -c "SELECT pg_database_size('${DB}');"`
                         ).then(r => r.stdout.trim()).catch(() => 'Error')
@@ -48,12 +48,14 @@ export default async function getBackupStats(_: FastifyRequest, res: FastifyRepl
                 ])
 
                 return {
-                     ...info,
-                     dbSize: isNaN(Number(dbSize)) ? dbSize : formatSize(Number(dbSize)),
-                     totalStorage: formatSize(stats.size),
-                     lastBackup: stats.time ? new Date(stats.time).toISOString() : null
+                    ...info,
+                    dbSize: isNaN(Number(dbSize)) ? dbSize : formatSize(Number(dbSize)),
+                    totalStorage: formatSize(stats.size),
+                    lastBackup: stats.time ? new Date(stats.time).toISOString() : null
                 }
-            } catch { return { ...info, dbSize: 'Error' } }
+            } catch {
+                return { ...info, dbSize: 'Error' }
+            }
         }))
 
         res.send(containers)

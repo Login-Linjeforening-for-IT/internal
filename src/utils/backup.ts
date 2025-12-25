@@ -11,7 +11,7 @@ export async function runBackup() {
     try {
         const format = '{{.ID}}|{{.Names}}|{{.Image}}|{{.Label "com.docker.compose.project"}}|{{.Label "com.docker.compose.project.working_dir"}}'
         const { stdout } = await execAsync(`docker ps --filter "label=com.docker.compose.project" --format '${format}'`)
-        
+
         const projects = new Set<string>()
         await Promise.all(stdout.split('\n').filter(l => l.toLowerCase().includes('postgres')).map(async (line) => {
             const [id, name, , project, workingDir] = line.split('|')
@@ -29,9 +29,9 @@ export async function runBackup() {
                 const stamp = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Oslo' }).replace(/\D/g, '')
                 const file = path.join(dir, `${DB}_${stamp}.sql`)
                 await execAsync(`docker exec -e PGPASSWORD="${DB_PASSWORD}" ${id} pg_dump -U "${DB_USER}" "${DB}" > "${file}"`)
-                
+
                 if ((await fs.stat(file)).size === 0) {
-                    await fs.unlink(file).catch(() => {})
+                    await fs.unlink(file).catch(() => { })
                     throw new Error('Empty backup')
                 }
                 console.log(`\tSaved: ${file}`)
@@ -46,7 +46,7 @@ export async function runBackup() {
             const files = await fs.readdir(dir).catch(() => [])
             for (const f of files) {
                 const fp = path.join(dir, f)
-                if ((await fs.stat(fp)).mtimeMs < limit) await fs.unlink(fp).catch(() => {})
+                if ((await fs.stat(fp)).mtimeMs < limit) await fs.unlink(fp).catch(() => { })
             }
         }
     } catch (e: any) {

@@ -14,7 +14,7 @@ type CheckTokenResponse = {
     error?: string
 }
 
-export default async function validateToken( req: FastifyRequest, res: FastifyReply ): Promise<CheckTokenResponse> {
+export default async function validateToken(req: FastifyRequest, res: FastifyReply): Promise<CheckTokenResponse> {
     const authHeader = req.headers['authorization']
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
