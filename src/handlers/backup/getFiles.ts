@@ -1,8 +1,8 @@
 import fs from 'fs/promises'
 import path from 'path'
 import config from '#config'
-import type { FastifyReply, FastifyRequest } from 'fastify'
 import { formatSize } from '#utils/format.ts'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type GetBackupFilesProps = {
     service?: string
@@ -11,20 +11,27 @@ type GetBackupFilesProps = {
 
 export default async function getBackupFiles(req: FastifyRequest, res: FastifyReply) {
     const { service, date } = req.query as GetBackupFilesProps
+
     try {
-        const projects = await fs.readdir(config.BACKUP_PATH).catch(() => [])
+        const projects = await fs.readdir(config.backup.path).catch(() => [])
         const files: { service: string, file: string, size: string, mtime: string }[] = []
 
         for (const project of projects) {
-            if (service && project !== service) continue
+            if (service && project !== service) {
+                continue
+            }
 
-            const projectDir = path.join(config.BACKUP_PATH, project)
+            const projectDir = path.join(config.backup.path, project)
             const stats = await fs.stat(projectDir).catch(() => null)
-            if (!stats || !stats.isDirectory()) continue
+            if (!stats || !stats.isDirectory()) {
+                continue
+            }
 
             const projectFiles = await fs.readdir(projectDir).catch(() => [])
             for (const file of projectFiles) {
-                if (date && !file.includes(date.replace(/-/g, ''))) continue
+                if (date && !file.includes(date.replace(/-/g, ''))) {
+                    continue
+                }
 
                 const filePath = path.join(projectDir, file)
                 const fileStat = await fs.stat(filePath).catch(() => null)
@@ -42,7 +49,7 @@ export default async function getBackupFiles(req: FastifyRequest, res: FastifyRe
         files.sort((a, b) => new Date(b.mtime).getTime() - new Date(a.mtime).getTime())
 
         res.send(files)
-    } catch (e: any) {
-        res.status(500).send({ error: e.message })
+    } catch (error) {
+        res.status(500).send({ error: (error as Error).message })
     }
 }

@@ -4,7 +4,7 @@ import { runBackup } from '../utils/backup.ts'
 import config from '#config'
 
 export default async function backupScheduler(fastify: FastifyInstance) {
-    const schedule = config.BACKUP_SCHEDULE || '0 0 * * *'
+    const schedule = config.backup.schedule || '0 0 * * *'
 
     if (!cron.validate(schedule)) {
         fastify.log.error(`Invalid cron schedule: ${schedule}. Backup scheduler not started.`)

@@ -23,7 +23,7 @@ export async function runBackup() {
                 if (!DB || !DB_USER || !DB_PASSWORD) throw new Error('Missing env vars')
 
                 projects.add(project)
-                const dir = path.join(config.BACKUP_PATH, project)
+                const dir = path.join(config.backup.path, project)
                 await fs.mkdir(dir, { recursive: true })
 
                 const stamp = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Oslo' }).replace(/\D/g, '')
@@ -40,9 +40,9 @@ export async function runBackup() {
             }
         }))
 
-        const limit = Date.now() - (Number(config.BACKUP_RETENTION_DAYS) || 7) * 86400000
+        const limit = Date.now() - (Number(config.backup.retention) || 7) * 86400000
         for (const p of projects) {
-            const dir = path.join(config.BACKUP_PATH, p)
+            const dir = path.join(config.backup.path, p)
             const files = await fs.readdir(dir).catch(() => [])
             for (const f of files) {
                 const fp = path.join(dir, f)

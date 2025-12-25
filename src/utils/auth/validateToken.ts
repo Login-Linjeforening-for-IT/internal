@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import config from '#config'
 
-const { USERINFO_URL } = config
+const { userinfo } = config
 
 type CheckTokenResponse = {
     valid: boolean
@@ -27,7 +27,7 @@ export default async function validateToken(req: FastifyRequest, res: FastifyRep
     const token = authHeader.split(' ')[1]
 
     try {
-        const userInfoRes = await fetch(USERINFO_URL, {
+        const userInfoRes = await fetch(userinfo, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

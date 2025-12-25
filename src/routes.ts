@@ -10,6 +10,7 @@ import getBackupStats from './handlers/backup/get.ts'
 import getBackupFiles from './handlers/backup/getFiles.ts'
 // import restoreBackup from './handlers/backup/post.ts'
 import preHandler from '#utils/auth/authMiddleware.ts'
+import getDatabaseCount from './handlers/backup/getCount.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -23,6 +24,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
 
     // backup
     fastify.get('/backup', { preHandler }, getBackupStats)
+    fastify.get('/databases', getDatabaseCount)
     fastify.get('/backup/files', { preHandler }, getBackupFiles)
     // fastify.post('/backup/restore', { preHandler }, restoreBackup)
 
