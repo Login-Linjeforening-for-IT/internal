@@ -37,7 +37,7 @@ export default async function getDashboardStats(_: FastifyRequest, res: FastifyR
         res.send({
             containers: lines.length,
             load,
-            memory: `${(usedMem / (1024 ** 3)).toFixed(1)}GB used of ${(totalMem / (1024 ** 3)).toFixed(1)}GB (${memPercent}%)`,
+            ram: `${(usedMem / (1024 ** 3)).toFixed(1)}GB used of ${(totalMem / (1024 ** 3)).toFixed(1)}GB (${memPercent}%)`,
             disk: diskUsage,
             processes,
         })
