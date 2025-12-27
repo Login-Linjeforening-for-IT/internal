@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import cron from 'node-cron'
-import { runBackup } from '../utils/backup.ts'
+import { runBackup } from '../utils/backup/backup.ts'
 import config from '#config'
 
 export default async function backupScheduler(fastify: FastifyInstance) {

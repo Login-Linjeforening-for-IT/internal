@@ -2,6 +2,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import config from '#config'
 import { formatSize } from '#utils/format.ts'
+import { getBackupDir } from '#utils/backup/utils.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type GetBackupFilesProps = {
@@ -21,7 +22,7 @@ export default async function getBackupFiles(req: FastifyRequest, res: FastifyRe
                 continue
             }
 
-            const projectDir = path.join(config.backup.path, project)
+            const projectDir = getBackupDir(project)
             const stats = await fs.stat(projectDir).catch(() => null)
             if (!stats || !stats.isDirectory()) {
                 continue

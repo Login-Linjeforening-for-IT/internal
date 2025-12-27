@@ -1,8 +1,5 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import getPostgresContainers from '#utils/backup/containers.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-
-const execAsync = promisify(exec)
 
 /**
  * Minimal endpoint to get database count
@@ -12,11 +9,7 @@ const execAsync = promisify(exec)
  */
 export default async function getDatabaseCount(_: FastifyRequest, res: FastifyReply) {
     try {
-        const format = '{{.Image}}'
-        const { stdout } = await execAsync(`docker ps -a --format '${format}'`)
-        const containers = await Promise.all(stdout.split('\n')
-            .filter(l => l.toLowerCase().includes('postgres'))
-        )
+        const containers = await getPostgresContainers({ all: true })
 
         res.send({ count: containers.length })
     } catch (error) {
