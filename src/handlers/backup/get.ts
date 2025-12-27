@@ -54,7 +54,7 @@ export default async function getBackupStats(_: FastifyRequest, res: FastifyRepl
                     info.dbSize === 'Unknown'
                         ? execAsync(
                             `docker exec -e PGPASSWORD="${DB_PASSWORD}" ${id} psql -U "${DB_USER}" -d "${DB}" -t -c "SELECT pg_database_size('${DB}');"`
-                        ).then(r => r.stdout.trim()).catch(() => 'Error')
+                        ).then(r => r.stdout.trim()).catch(() => 'Unknown')
                         : Promise.resolve(info.dbSize),
                     fs.readdir(backupDir).then(async files => {
                         const s = await Promise.all(
