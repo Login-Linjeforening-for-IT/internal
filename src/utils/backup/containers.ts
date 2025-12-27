@@ -12,17 +12,21 @@ type PostgresContainer = {
     status: string
 }
 
-export default async function getPostgresContainers(options: { all?: boolean, filterId?: string } = {}): Promise<PostgresContainer[]> {
+export default async function getPostgresContainers(options: { all?: boolean, filterId?: string, filterProject?: string } = {}): Promise<PostgresContainer[]> {
     const format = '{{.ID}}|{{.Names}}|{{.Image}}|{{.Label "com.docker.compose.project"}}|{{.Label "com.docker.compose.project.working_dir"}}|{{.Status}}'
     
     let cmd = 'docker ps'
-    if (options.all || options.filterId) {
+    if (options.all || options.filterId || options.filterProject) {
         cmd += ' -a'
     }
     
     if (options.filterId) {
         cmd += ` --filter "id=${options.filterId}"`
-    } else if (!options.all) {
+    }
+    if (options.filterProject) {
+        cmd += ` --filter "label=com.docker.compose.project=${options.filterProject}"`
+    }
+    if (!options.filterId && !options.filterProject && !options.all) {
         cmd += ' --filter "label=com.docker.compose.project"'
     }
 

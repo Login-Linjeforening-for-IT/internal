@@ -10,19 +10,19 @@ import getPostgresContainers from '#utils/backup/containers.ts'
 const execAsync = promisify(exec)
 
 type RestoreBackupProps = {
-    id: string
+    service: string
     file: string
 }
 
 export default async function restoreBackup(req: FastifyRequest, res: FastifyReply) {
-    const { id, file } = req.body as RestoreBackupProps
+    const { service, file } = req.body as RestoreBackupProps
 
-    if (!id || !file) {
-        return res.status(400).send({ error: 'Missing id or file' })
+    if (!service || !file) {
+        return res.status(400).send({ error: 'Missing service or file' })
     }
 
     try {
-        const containers = await getPostgresContainers({ filterId: id })
+        const containers = await getPostgresContainers({ filterProject: service })
         const container = containers[0]
         
         if (!container) {
