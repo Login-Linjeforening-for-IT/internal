@@ -85,6 +85,27 @@ const config = {
         options: { maxBuffer: 12 * 1024 * 1024, timeout: 5000 },
         tail: 500
     },
+    releases: {
+        webhookUrl: env.RELEASES_WEBHOOK_URL,
+        threadId: env.RELEASES_THREAD_ID,
+        schedule: env.RELEASES_SCHEDULE || '0 14 * * *',
+        feeds: [
+            {
+                name: 'goauthentik/authentik',
+                url: 'https://github.com/goauthentik/authentik/releases.atom',
+                repoUrl: 'https://github.com/goauthentik/authentik',
+                avatarUrl: 'https://avatars.githubusercontent.com/u/82976448',
+                color: 0x3d6ef2,
+            },
+            {
+                name: 'zammad/zammad',
+                url: 'https://github.com/zammad/zammad/releases.atom',
+                repoUrl: 'https://github.com/zammad/zammad',
+                avatarUrl: 'https://avatars.githubusercontent.com/u/1380327',
+                color: 0xe8a400,
+            },
+        ],
+    },
     service: {
         beekeeperToken: process.env.BEEKEEPER_TOKEN || process.env.INTERNAL_TOKEN || ''
     }

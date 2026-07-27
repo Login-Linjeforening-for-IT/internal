@@ -9,6 +9,7 @@ import backupScheduler from './plugins/backupScheduler.ts'
 import logAlertScheduler from './plugins/logAlertScheduler.ts'
 import vulnerabilityScheduler from './plugins/vulnerabilityScheduler.ts'
 import scouterBee from './plugins/scouterBee.ts'
+import releaseScheduler from './plugins/releaseScheduler.ts'
 import fs from 'fs'
 import path from 'path'
 import { installJsonConsoleLogger, log } from './utils/jsonLogger.ts'
@@ -57,6 +58,7 @@ fastify.register(backupScheduler)
 fastify.register(logAlertScheduler)
 fastify.register(vulnerabilityScheduler)
 fastify.register(scouterBee)
+fastify.register(releaseScheduler)
 fastify.register(routes, { prefix: '/api' })
 fastify.get('/', getIndex)
 fastify.get('/favicon.ico', getFavicon)
