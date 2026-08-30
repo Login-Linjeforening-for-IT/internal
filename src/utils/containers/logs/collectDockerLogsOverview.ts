@@ -35,23 +35,30 @@ export async function collectDockerLogsOverview({
         return true
     })
 
-    const results = await Promise.all(selected.map(async item => {
-        const { stdout, stderr } = await execAsync(`docker logs --timestamps --tail ${tail} ${item.id}`, config.docker.options)
-        const entries = finalizeEntries(
-            filterEntries(parseEntries(`${stdout}\n${stderr}`), { level, search }).slice(-50),
-            item.id
-        )
+    const results = (await Promise.all(selected.map(async item => {
+        try {
+            const { stdout, stderr } = await execAsync(`docker logs --timestamps --tail ${tail} ${item.id}`, config.docker.options)
+            const entries = finalizeEntries(
+                filterEntries(parseEntries(`${stdout}\n${stderr}`), { level, search }).slice(-50),
+                item.id
+            )
 
-        return {
-            id: item.id,
-            name: item.name,
-            service: item.project || item.name.split('_')[0] || item.name,
-            status: item.status,
-            sourceType: 'container' as const,
-            matchedLines: entries.length,
-            entries
+            return {
+                id: item.id,
+                name: item.name,
+                service: item.project || item.name.split('_')[0] || item.name,
+                status: item.status,
+                sourceType: 'container' as const,
+                matchedLines: entries.length,
+                entries
+            }
+        } catch (error) {
+            if (/can not get logs from container which is dead or marked for removal/i.test(String((error as Error).message))) {
+                return null
+            }
+            throw error
         }
-    }))
+    }))).filter((result): result is CollectedLogSource => result !== null)
 
     const hostSources = await getHostLogSources({ tail, level, search })
 
