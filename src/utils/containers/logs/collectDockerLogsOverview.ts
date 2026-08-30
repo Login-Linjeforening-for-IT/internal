@@ -36,7 +36,7 @@ export async function collectDockerLogsOverview({
     })
 
     const results = await Promise.all(selected.map(async item => {
-        const { stdout, stderr } = await execAsync(`docker logs --tail ${tail} ${item.id}`, config.docker.options)
+        const { stdout, stderr } = await execAsync(`docker logs --timestamps --tail ${tail} ${item.id}`, config.docker.options)
         const entries = finalizeEntries(
             filterEntries(parseEntries(`${stdout}\n${stderr}`), { level, search }).slice(-50),
             item.id

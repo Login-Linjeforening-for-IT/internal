@@ -8,8 +8,8 @@ import parsePostgresTimestamp from './parsePostgresTimestamp'
 import parseSlashTimestamp from './parseSlashTimestamp'
 
 function isBenignOperationalNoise(message: string, raw: string) {
-    return /Failed to find Server Action "[a-f0-9]+"/i.test(message)
-        || /Failed to find Server Action "[a-f0-9]+"/i.test(raw)
+    return /Failed to find Server Action "[^"]+"/i.test(message)
+        || /Failed to find Server Action "[^"]+"/i.test(raw)
         || /^Successfully added song .+ by .+, played by .+$/i.test(message)
         || /^Adding song: '.+' by artist '.+' for user '.+'\.$/i.test(message)
 }
@@ -67,6 +67,19 @@ export default function parseLogLine(line: string) {
             structured: true
         }
     } catch {
+        const dockerTimestampMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\s+(.+)$/)
+        if (dockerTimestampMatch) {
+            const [, rawTimestamp, message] = dockerTimestampMatch
+            const parsed = parseLogLine(message)
+            if (parsed) {
+                return {
+                    ...parsed,
+                    raw: trimmed,
+                    timestamp: normalizeTimestamp(rawTimestamp),
+                }
+            }
+        }
+
         const accessMatch = parseHttpAccessStatus(trimmed)
         if (accessMatch) {
             const isError = accessMatch.status >= 500
