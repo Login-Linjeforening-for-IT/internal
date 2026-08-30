@@ -8,8 +8,8 @@ import parsePostgresTimestamp from './parsePostgresTimestamp'
 import parseSlashTimestamp from './parseSlashTimestamp'
 
 function isBenignOperationalNoise(message: string, raw: string) {
-    return /Failed to find Server Action "[^"]+"/i.test(message)
-        || /Failed to find Server Action "[^"]+"/i.test(raw)
+    return /Failed to find Server Action\b/i.test(message)
+        || /Failed to find Server Action\b/i.test(raw)
         || /^Successfully added song .+ by .+, played by .+$/i.test(message)
         || /^Adding song: '.+' by artist '.+' for user '.+'\.$/i.test(message)
 }
@@ -44,7 +44,7 @@ function parseHttpAccessTimestamp(rawTimestamp: string) {
     return normalizeTimestamp(`${year}-${String(monthIndex + 1).padStart(2, '0')}-${day}T${hour}:${minute}:${second}${normalizedOffset}`)
 }
 
-export default function parseLogLine(line: string) {
+export default function parseLogLine(line: string): ParsedLogEntry | null {
     const trimmed = line.trim()
     if (!trimmed) {
         return null
@@ -70,7 +70,7 @@ export default function parseLogLine(line: string) {
         const dockerTimestampMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\s+(.+)$/)
         if (dockerTimestampMatch) {
             const [, rawTimestamp, message] = dockerTimestampMatch
-            const parsed = parseLogLine(message)
+            const parsed: ParsedLogEntry | null = parseLogLine(message)
             if (parsed) {
                 return {
                     ...parsed,
