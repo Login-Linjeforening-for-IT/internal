@@ -44,6 +44,7 @@ async function runScout(image: string): Promise<{ vulnerabilities: Vulnerability
     const proc = Bun.spawn(
         // ponytail: pull the small Scout runner on each scan so its CLI updates without rebuilding Internal.
         ['docker', 'run', '--rm', '--pull=always',
+            '--user', '0',
             '-v', '/var/run/docker.sock:/var/run/docker.sock',
             '-v', `${process.env.SCOUT_DOCKER_CONFIG_PATH || '/home/app/.docker'}:/root/.docker`,
             'docker/scout-cli:latest', 'cves', '--format', 'sarif', `local://${image}`],
