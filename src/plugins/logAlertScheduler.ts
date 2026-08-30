@@ -1,11 +1,18 @@
 import type { FastifyInstance } from 'fastify'
 import config from '#config'
-import pruneSeenFingerprints, { seenFingerprints } from './pruneSeenFingerprints.ts'
 import { collectDockerLogsOverview } from '#utils/containers/logs/collectDockerLogsOverview.ts'
 import { discordAlert } from 'utilbee/utils'
 import { buildLogsDeepLink } from '#utils/containers/logs/buildLogsDeepLink.ts'
 import escapeCodeBlock from '#utils/containers/logs/escapeCodeBlock.ts'
 import truncate from '#utils/containers/logs/truncate.ts'
+import { ensureInternalSchema, query } from '#db'
+import { createHash } from 'crypto'
+
+function incidentKey(source: { service: string, name: string }, entry: LogEntry) {
+    return createHash('sha1')
+        .update([source.service, source.name, entry.level, entry.message.trim()].join('::'))
+        .digest('hex')
+}
 
 export default async function logAlertScheduler(fastify: FastifyInstance) {
     if (!config.logs.alerts.enabled || !config.logs.alerts.webhook) {
@@ -21,25 +28,34 @@ export default async function logAlertScheduler(fastify: FastifyInstance) {
     fastify.log.info(`Log alert scheduler started. Schedule: '${config.logs.alerts.schedule}'`)
 
     let primed = false
+    let running = false
 
     Bun.cron(config.logs.alerts.schedule, async () => {
+        if (running) return
+        running = true
         try {
-            pruneSeenFingerprints()
+            await ensureInternalSchema()
+            await query('DELETE FROM log_alert_incidents WHERE alerted_at < now() - interval \'24 hours\'')
+            const { rows } = await query<{ incident_key: string }>(
+                'SELECT incident_key FROM log_alert_incidents WHERE alerted_at >= now() - interval \'24 hours\''
+            )
+            const seenIncidents = new Set(rows.map(row => row.incident_key))
             const overview = await collectDockerLogsOverview({ level: 'error', tail: 200 })
             const pending = overview.containers.flatMap(source =>
                 source.entries.map(entry => ({ entry, source }))
             )
 
             if (!primed) {
-                pending.forEach(({ entry }) => {
-                    seenFingerprints.set(entry.fingerprint, Date.now())
+                pending.forEach(({ entry, source }) => {
+                    seenIncidents.add(incidentKey(source, entry))
                 })
                 primed = true
                 return
             }
 
             for (const item of pending) {
-                if (seenFingerprints.has(item.entry.fingerprint)) {
+                const key = incidentKey(item.source, item.entry)
+                if (seenIncidents.has(key)) {
                     continue
                 }
 
@@ -74,10 +90,16 @@ export default async function logAlertScheduler(fastify: FastifyInstance) {
                         await new Promise(resolve => setTimeout(resolve, Math.ceil(retryAfter * 1000) + 100))
                     }
                 }
-                seenFingerprints.set(item.entry.fingerprint, Date.now())
+                await query(
+                    'INSERT INTO log_alert_incidents (incident_key) VALUES ($1) ON CONFLICT (incident_key) DO NOTHING',
+                    [key]
+                )
+                seenIncidents.add(key)
             }
         } catch (error) {
             fastify.log.error(error, 'Scheduled log alert dispatch failed.')
+        } finally {
+            running = false
         }
     })
 }

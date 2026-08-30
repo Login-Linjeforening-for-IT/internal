@@ -65,6 +65,11 @@ async function createInternalSchema() {
             updated_at timestamptz NOT NULL DEFAULT now()
         );
 
+        CREATE TABLE IF NOT EXISTS log_alert_incidents (
+            incident_key text PRIMARY KEY,
+            alerted_at timestamptz NOT NULL DEFAULT now()
+        );
+
         ALTER TABLE vulnerability_report_images
         ADD COLUMN IF NOT EXISTS scanner_results jsonb NOT NULL DEFAULT '[]'::jsonb;
 
