@@ -37,7 +37,6 @@ services:
             - "${DOCKER_GID}"
             - "${HOST_GID}"
         volumes:
-            - ${HOME}/.docker:/home/app/.docker
             - /var/run/docker.sock:/var/run/docker.sock
             - internal_data:/app/data
             - /backups:/backups
