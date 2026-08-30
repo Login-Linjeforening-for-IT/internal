@@ -4,7 +4,7 @@ export async function scanImage(image: string): Promise<ImageVulnerabilityReport
     const scannedAt = new Date().toISOString()
 
     try {
-        const vulnerabilities = await runScout(image)
+        const { vulnerabilities, note } = await runScout(image)
         const severity = tally(vulnerabilities)
         return {
             image,
@@ -16,7 +16,7 @@ export async function scanImage(image: string): Promise<ImageVulnerabilityReport
             scannerResults: [{
                 scanner: 'docker_scout', scannedAt,
                 totalVulnerabilities: vulnerabilities.length, severity,
-                scanError: null, summaryOnly: false, note: null,
+                scanError: null, summaryOnly: false, note,
             }],
             scanError: null,
         }
@@ -40,9 +40,13 @@ export async function scanImage(image: string): Promise<ImageVulnerabilityReport
     }
 }
 
-async function runScout(image: string): Promise<VulnerabilityDetail[]> {
+async function runScout(image: string): Promise<{ vulnerabilities: VulnerabilityDetail[], note: string | null }> {
     const proc = Bun.spawn(
-        ['docker', 'scout', 'cves', `local://${image}`, '--format', 'sarif'],
+        // ponytail: pull the small Scout runner on each scan so its CLI updates without rebuilding Internal.
+        ['docker', 'run', '--rm', '--pull=always',
+            '-v', '/var/run/docker.sock:/var/run/docker.sock',
+            '-v', '/home/app/.docker:/root/.docker',
+            'docker/scout-cli:latest', 'cves', '--format', 'sarif', `local://${image}`],
         { stdout: 'pipe', stderr: 'pipe' }
     )
 
@@ -59,7 +63,8 @@ async function runScout(image: string): Promise<VulnerabilityDetail[]> {
         if (killed) throw new Error(`docker scout timed out after ${TIMEOUT_MS / 1000}s`)
         if (code !== 0) throw new Error(stderr.trim() || `docker scout exited with code ${code}`)
 
-        return parseSarif(stdout)
+        const note = stderr.match(/i New version [^\n]+/)?.[0] ?? null
+        return { vulnerabilities: parseSarif(stdout), note }
     } finally {
         clearTimeout(timer)
     }
