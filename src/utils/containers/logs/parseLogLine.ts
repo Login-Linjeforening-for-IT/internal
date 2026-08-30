@@ -56,7 +56,7 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
         const message = normalizeText(parsed.msg ?? parsed.message ?? parsed.error ?? trimmed)
         const timestamp = normalizeText(parsed.time ?? parsed.timestamp)
         const benign = isBenignOperationalNoise(message, trimmed)
-        const isError = !benign && (level === 'error' || inferIsError(message, trimmed))
+        const isError = !benign && (level === 'error' || (!level && inferIsError(message, trimmed)))
 
         return {
             raw: trimmed,
@@ -98,7 +98,7 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
             const [, rawTimestamp, rawLevel, message] = nginxMatch
             const level = inferLevel(message, rawLevel)
             const benign = isBenignOperationalNoise(message, trimmed)
-            const isError = !benign && (level === 'error' || inferIsError(message, trimmed))
+            const isError = !benign && (level === 'error' || (!level && inferIsError(message, trimmed)))
 
             return {
                 raw: trimmed,
@@ -116,7 +116,7 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
             const [, rawTimestamp, source, message] = journalMatch
             const level = inferLevel(message, source)
             const benign = isBenignOperationalNoise(message, trimmed)
-            const isError = !benign && (level === 'error' || inferIsError(message, trimmed))
+            const isError = !benign && (level === 'error' || (!level && inferIsError(message, trimmed)))
 
             return {
                 raw: trimmed,
@@ -133,7 +133,7 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
             const [, rawTimestamp, timezone, rawLevel, message] = postgresMatch
             const level = inferLevel(message, rawLevel)
             const benign = isBenignOperationalNoise(message, trimmed)
-            const isError = !benign && (level === 'error' || inferIsError(message, trimmed))
+            const isError = !benign && (level === 'error' || (!level && inferIsError(message, trimmed)))
 
             return {
                 raw: trimmed,
@@ -150,7 +150,7 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
             const [, rawTimestamp, source, message] = syslogMatch
             const level = inferLevel(message, source)
             const benign = isBenignOperationalNoise(message, trimmed)
-            const isError = !benign && (level === 'error' || inferIsError(message, trimmed))
+            const isError = !benign && (level === 'error' || (!level && inferIsError(message, trimmed)))
 
             return {
                 raw: trimmed,
@@ -167,25 +167,27 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
             const [, rawTimestamp, message] = historyMatch
             const timestamp = Number(rawTimestamp)
             const parsedTimestamp = Number.isFinite(timestamp) ? new Date(timestamp * 1000).toISOString() : null
+            const level = inferLevel(message, '')
             const benign = isBenignOperationalNoise(message, trimmed)
-            const isError = !benign && inferIsError(message, trimmed)
+            const isError = !benign && (level === 'error' || (!level && inferIsError(message, trimmed)))
 
             return {
                 raw: trimmed,
                 message,
-                level: benign ? 'info' : isError ? 'error' : 'info',
+                level: benign ? 'info' : level || (isError ? 'error' : 'info'),
                 timestamp: parsedTimestamp,
                 isError,
                 structured: false
             }
         }
 
+        const level = inferLevel(trimmed, '')
         const benign = isBenignOperationalNoise(trimmed, trimmed)
-        const isError = !benign && inferIsError(trimmed, trimmed)
+        const isError = !benign && (level === 'error' || (!level && inferIsError(trimmed, trimmed)))
         return {
             raw: trimmed,
             message: trimmed,
-            level: benign ? 'info' : isError ? 'error' : 'info',
+            level: benign ? 'info' : level || (isError ? 'error' : 'info'),
             timestamp: null,
             isError,
             structured: false
