@@ -23,7 +23,7 @@ services:
             DB_PORT: 5432
             DB_USER: ${DB_USER:-internal}
             DEPLOY_ROOT: /workspace
-            LOG_ALERTS_ENABLED: ${LOG_ALERTS_ENABLED:-false}
+            LOG_ALERTS_ENABLED: ${LOG_ALERTS_ENABLED:-true}
             NODE_ENV: production
             PORT: 8001
             SCOUTERBEE_PROJECT_ROOT: ${SCOUTERBEE_PROJECT_ROOT:-/workspace}
