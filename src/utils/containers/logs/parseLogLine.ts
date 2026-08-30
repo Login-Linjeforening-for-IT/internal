@@ -12,6 +12,8 @@ function isBenignOperationalNoise(message: string, raw: string) {
         || /Failed to find Server Action\b/i.test(raw)
         || /^Successfully added song .+ by .+, played by .+$/i.test(message)
         || /^Adding song: '.+' by artist '.+' for user '.+'\.$/i.test(message)
+        || /^(?:database system was interrupted|automatic recovery in progress|database system was not properly shut down)$/i.test(message)
+        || /^database system is (?:starting up|not yet accepting connections|ready to accept connections)$/i.test(message)
 }
 
 function parseHttpAccessStatus(raw: string) {
