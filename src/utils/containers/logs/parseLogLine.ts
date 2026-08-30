@@ -162,6 +162,31 @@ export default function parseLogLine(line: string): ParsedLogEntry | null {
             }
         }
 
+        const redisMatch = trimmed.match(
+            /^\d+:[A-Z]\s+(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?\s+([*#-])\s+(.*)$/
+        )
+        if (redisMatch) {
+            const [, day, month, year, hour, minute, second, fraction, marker, message] = redisMatch
+            const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                .findIndex(value => value.toLowerCase() === month.toLowerCase())
+            const milliseconds = fraction ? fraction.slice(0, 3).padEnd(3, '0') : '000'
+            const redisTimestamp = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${day.padStart(2, '0')}`
+                + `T${hour}:${minute}:${second}.${milliseconds}Z`
+            const timestamp = monthIndex >= 0
+                ? normalizeTimestamp(redisTimestamp)
+                : null
+            const level = marker === '*' ? 'info' : marker === '#' ? 'warn' : 'debug'
+
+            return {
+                raw: trimmed,
+                message,
+                level,
+                timestamp,
+                isError: false,
+                structured: false
+            }
+        }
+
         const historyMatch = trimmed.match(/^: (\d+):\d+;(.*)$/)
         if (historyMatch) {
             const [, rawTimestamp, message] = historyMatch
