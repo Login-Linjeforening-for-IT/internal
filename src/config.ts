@@ -82,7 +82,7 @@ const config = {
         },
     },
     docker: {
-        options: { maxBuffer: 12 * 1024 * 1024, timeout: 5000 },
+        options: { maxBuffer: 12 * 1024 * 1024, timeout: 15000 },
         tail: 500
     },
     releases: {

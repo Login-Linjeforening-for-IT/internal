@@ -46,24 +46,34 @@ export default async function logAlertScheduler(fastify: FastifyInstance) {
                 const logDetails = truncate(item.entry.raw || item.entry.message)
                 const deepLink = buildLogsDeepLink(item.source.id, item.entry.fingerprint)
 
-                await discordAlert({
-                    webhookURL: config.logs.alerts.webhook!,
-                    threadId: config.logs.alerts.threadId,
-                    title: `${item.source.name} reported an error`,
-                    url: deepLink,
-                    color: config.login.color,
-                    description: `\`\`\`log\n${escapeCodeBlock(logDetails)}\n\`\`\``,
-                    fields: [
-                        { name: 'Server', value: overview.server, inline: true },
-                        { name: 'Service', value: item.source.service, inline: true },
-                        { name: 'Source', value: item.source.name, inline: true },
-                        { name: 'Status', value: item.source.status, inline: true },
-                        { name: 'Level', value: item.entry.level, inline: true },
-                        { name: 'Link', value: deepLink, inline: false },
-                    ],
-                    footer: `Fingerprint ${item.entry.fingerprint}`,
-                    timestamp: item.entry.timestamp || overview.checkedAt,
-                })
+                let sent = false
+                for (let attempt = 0; attempt < 3 && !sent; attempt++) {
+                    try {
+                        await discordAlert({
+                            webhookURL: config.logs.alerts.webhook!,
+                            threadId: config.logs.alerts.threadId,
+                            title: `${item.source.name} reported an error`,
+                            url: deepLink,
+                            color: config.login.color,
+                            description: `\`\`\`log\n${escapeCodeBlock(logDetails)}\n\`\`\``,
+                            fields: [
+                                { name: 'Server', value: overview.server, inline: true },
+                                { name: 'Service', value: item.source.service, inline: true },
+                                { name: 'Source', value: item.source.name, inline: true },
+                                { name: 'Status', value: item.source.status, inline: true },
+                                { name: 'Level', value: item.entry.level, inline: true },
+                                { name: 'Link', value: deepLink, inline: false },
+                            ],
+                            footer: `Fingerprint ${item.entry.fingerprint}`,
+                            timestamp: item.entry.timestamp || overview.checkedAt,
+                        })
+                        sent = true
+                    } catch (error) {
+                        const retryAfter = Number(/retry_after[^0-9]*([0-9.]+)/i.exec(String(error))?.[1] || 0)
+                        if (!retryAfter || attempt === 2) throw error
+                        await new Promise(resolve => setTimeout(resolve, Math.ceil(retryAfter * 1000) + 100))
+                    }
+                }
                 seenFingerprints.set(item.entry.fingerprint, Date.now())
             }
         } catch (error) {
